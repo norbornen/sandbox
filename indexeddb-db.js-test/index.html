@@ -15,17 +15,17 @@
 		}
 	</style>
 	<script>
-		var server;
+		var serverName = 'my-app', server;
 		function connect(){
 			db.open({
-				server: 'my-app',
+				server: serverName,
 				version: 1,
 				schema: {
 					people: {
 						key: { keyPath: 'id' , autoIncrement: true },
-						// Optionally add indexes
 						indexes: {
 							firstName: { },
+							lastName: { },
 							answer: { unique: true }
 						}
 					}
@@ -36,43 +36,57 @@
 			});
 		}
 		function add(){
-			server.people.add({
-				firstName: 'Aaron',
-				lastName: 'Powell',
-				answer: 42
-			}).then(function(item){
-				console.log('add', item);
-			});
-			server.people.add({
-				firstName: 'Aaron2',
-				lastName: 'Powell2',
-				answer: 43
-			}).then(function(item){
-				console.log('add', item);
-			});
-			server.people.add({
-				firstName: 'Aaron3',
-				lastName: 'Powell3',
-				answer: 44
-			}).then(function(item){
-				console.log('add', item);
-			});
-			console.log(
+			var count = 30;
+			while (count--) {
 				server.people.add({
-            	    firstName: 'Aaron4',
-        	        lastName: 'Powell4',
-    	            answer: 45
-	            })
-			);
+					firstName: 'Aaron',
+					lastName: 'Powell' + count,
+					answer: 42 + count
+				}).then(function(item){
+					console.log('add', item);
+				}, function(err){
+					console.log(err)
+				});
+			}
 		}
-		function query() {
+		function dropDB(){
+			indexedDB.deleteDatabase(serverName);
+		}
+		function query1() {
 			server.people
 				.query()
-//				.filter( 'firstName', 'Aaron' )
-				.filter(function(person){ return person.firstName == 'Aaron2' || person.firstName == 'Aaron3' })
+				.filter(function(o){ return o.firstName == 'Aaron' })
 				.execute()
 				.then(function(results) {
-					console.log('query', results);
+					console.log('query1', results);
+				});
+		}
+		function query2() {
+			server.people
+				.query('firstName')
+				.filter('firstName', 'Aaron')
+				.limit(0, 5)
+				.execute()
+				.then(function(results) {
+					console.log('query2.1 (limit 5)', results.map(function(o){ return o.id + ':' + o.firstName }));
+				});
+			server.people
+				.query('lastName')
+				.filter('lastName', 'Powell4')
+				.execute()
+				.then(function(results) {
+					console.log('query2.2', results.map(function(o){ return o.id + ':' + o.firstName + ' ' + o.lastName }));
+				});
+		}
+		function query3() {
+			server.people
+				.query('firstName')
+				.filter()
+				.desc()
+				//.limit(0, 5)
+				.execute()
+				.then(function(results) {
+					console.log('query3.1', results.map(function(o){ return o.id + ':' + o.firstName }));
 				});
 		}
 	</script>
@@ -80,8 +94,11 @@
 <body>
 	<div>
 		<button class="btn btn-default" onclick="return connect()">connect</button>
+		<button class="btn btn-default" onclick="return dropDB()">drop</button>
 		<button class="btn btn-default" onclick="return add()">add</button>
-		<button class="btn btn-default" onclick="return query()">query</button>
+		<button class="btn btn-default" onclick="return query1()">query1</button>
+		<button class="btn btn-default" onclick="return query2()">query2</button>
+		<button class="btn btn-default" onclick="return query3()">query3</button>
 	</div>
 </body>
 </html>
