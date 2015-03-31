@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<head>
+	<title>indexeddb-test</title>
+	<meta charset='utf-8'>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<script src="db.js"></script>
+	<style type="text/css">
+		body {
+			font-size: 13px;
+			margin: 1em;
+		}
+	</style>
+	<script>
+		var server;
+		function connect(){
+			db.open({
+				server: 'my-app',
+				version: 1,
+				schema: {
+					people: {
+						key: { keyPath: 'id' , autoIncrement: true },
+						// Optionally add indexes
+						indexes: {
+							firstName: { },
+							answer: { unique: true }
+						}
+					}
+				}
+			}).then(function(s){
+				server = s;
+				console.log(s)
+			});
+		}
+		function add(){
+			server.people.add({
+				firstName: 'Aaron',
+				lastName: 'Powell',
+				answer: 42
+			}).then(function(item){
+				console.log('add', item);
+			});
+			server.people.add({
+				firstName: 'Aaron2',
+				lastName: 'Powell2',
+				answer: 43
+			}).then(function(item){
+				console.log('add', item);
+			});
+			server.people.add({
+				firstName: 'Aaron3',
+				lastName: 'Powell3',
+				answer: 44
+			}).then(function(item){
+				console.log('add', item);
+			});
+			console.log(
+				server.people.add({
+            	    firstName: 'Aaron4',
+        	        lastName: 'Powell4',
+    	            answer: 45
+	            })
+			);
+		}
+		function query() {
+			server.people
+				.query()
+//				.filter( 'firstName', 'Aaron' )
+				.filter(function(person){ return person.firstName == 'Aaron2' || person.firstName == 'Aaron3' })
+				.execute()
+				.then(function(results) {
+					console.log('query', results);
+				});
+		}
+	</script>
+</head>
+<body>
+	<div>
+		<button class="btn btn-default" onclick="return connect()">connect</button>
+		<button class="btn btn-default" onclick="return add()">add</button>
+		<button class="btn btn-default" onclick="return query()">query</button>
+	</div>
+</body>
+</html>
